@@ -1,0 +1,334 @@
+#include "menu.h"
+#include "Lcd_Driver.h"
+#include "rtc.h"
+#include "GUI.h"
+#include "usmart.h"
+#include "function.h"
+#include "adc.h"
+#include "pwm.h"
+
+
+
+extern u8 cursor_position ;
+extern int Natural_Light;//环境光
+extern int LED_Light;//LED灯光
+
+struct Menu *menuP                         ;//指向当前菜单
+//struct Menu Main_menu[4]                   ;//主菜单
+
+struct Menu Manual_mode[5]                 ;//手动模式
+struct Menu Intelligent_mode[6]            ;//智能模式
+struct Menu Settings_menu1[6]               ;//设置菜单1
+struct Menu Settings_menu2[6]               ;//设置菜单2
+struct Menu Set_Time1[2];
+struct Menu Set_Date1[2];
+struct Menu Set_Week1[2];
+struct Menu Set_AlarmA1[2];
+struct Menu Observed_Value1[5];
+struct Menu Set_Time2[2];
+struct Menu Set_Date2[2];
+struct Menu Set_Week2[2];
+struct Menu Set_AlarmA2[2];
+struct Menu Observed_Value2[5];
+struct AlarmA alarma ;
+
+struct AlarmA alarma = {
+		0,
+	  0,
+	  0,
+	  0,
+	};
+//struct Menu Main_menu[4] ={
+//   
+//	};
+struct Menu Manual_mode[5] ={
+    {5,1,1,1,1,0,NULL,Intelligent_mode,Manual_display},
+		{5,2,1,1,1,0,NULL,NULL,Manual_display},
+		{5,3,1,1,1,0,NULL,NULL,Manual_display},
+		{5,4,1,1,1,0,NULL,NULL,Manual_display},
+		{5,5,1,1,1,0,NULL,Settings_menu1,Manual_display},
+	};
+
+struct Menu Intelligent_mode[6] ={
+    {6,1,1,1,1,0,Manual_mode,NULL,Intelligent_display},
+		{6,2,1,1,1,0,Manual_mode,NULL,Intelligent_display},
+		{6,3,1,1,1,0,Manual_mode,NULL,Intelligent_display},
+		{6,4,1,1,1,0,Manual_mode,NULL,Intelligent_display},
+		{6,5,1,1,1,0,Manual_mode,NULL,Intelligent_display},
+		{6,6,1,1,1,0,Manual_mode,Settings_menu2,Intelligent_display},
+	};
+
+
+struct Menu Settings_menu1[6] = {
+	  {6,1,1,1,2,0,Manual_mode,NULL,Settings_display},
+	  {6,2,1,1,2,0,Manual_mode,Set_Time1,Settings_display},
+	  {6,3,1,1,2,0,Manual_mode,Set_Date1,Settings_display},
+	  {6,4,1,1,2,0,Manual_mode,Set_Week1,Settings_display},
+	  {6,5,1,1,2,0,Manual_mode,Set_AlarmA1,Settings_display},
+	  {6,6,1,1,2,0,Manual_mode,NULL,Settings_display},
+
+  };
+
+struct Menu Settings_menu2[6] = {
+	  {6,1,1,1,2,0,Intelligent_mode,NULL,Settings_display},
+	  {6,2,1,1,2,0,Intelligent_mode,Set_Time2,Settings_display},
+	  {6,3,1,1,2,0,Intelligent_mode,Set_Date2,Settings_display},
+	  {6,4,1,1,2,0,Intelligent_mode,Set_Week2,Settings_display},
+	  {6,5,1,1,2,0,Intelligent_mode,Set_AlarmA2,Settings_display},
+	  {6,6,1,1,2,0,Intelligent_mode,NULL,Settings_display},
+  };
+  
+struct Menu Set_Date1[2] = {
+		{2,1,1,1,3,0,Manual_mode,NULL,Set_Date},
+		{2,2,1,1,3,0,Manual_mode,NULL,Set_Date},
+};
+
+struct Menu Set_Time1[2] = {
+		{2,1,1,1,3,0,Manual_mode,NULL,Set_Time},
+		{2,2,1,1,3,0,Manual_mode,NULL,Set_Time},
+};
+
+struct Menu Set_Week1[2] = {
+		{2,1,1,1,3,0,Manual_mode,NULL,Set_Week},
+		{2,2,1,1,3,0,Manual_mode,NULL,Set_Week},
+};
+
+struct Menu Set_AlarmA1[2] = {
+		{2,1,1,1,3,0,Manual_mode,NULL,Set_AlarmA},
+		{2,2,1,1,3,0,Manual_mode,NULL,Set_AlarmA},
+};
+
+struct Menu Observed_Value1[5]={
+		{5,1,1,1,3,0,Manual_mode,NULL,Observed_Value},
+		{5,2,1,1,3,0,Manual_mode,NULL,Observed_Value},
+		{5,3,1,1,3,0,Manual_mode,NULL,Observed_Value},
+		{5,4,1,1,3,0,Manual_mode,NULL,Observed_Value},
+		{5,5,1,1,3,0,Manual_mode,NULL,Observed_Value},
+};
+
+
+struct Menu Set_Date2[2] = {
+		{2,1,1,1,3,0,Intelligent_mode,NULL,Set_Date},
+		{2,2,1,1,3,0,Intelligent_mode,NULL,Set_Date},
+};
+
+struct Menu Set_Time2[2] = {
+			{2,1,1,1,3,0,Intelligent_mode,NULL,Set_Time},
+		{2,2,1,1,3,0,Intelligent_mode,NULL,Set_Time},
+};
+
+struct Menu Set_Week2[2] = {
+			{2,1,1,1,3,0,Intelligent_mode,NULL,Set_Week},
+		  {2,2,1,1,3,0,Intelligent_mode,NULL,Set_Week},
+};
+
+struct Menu Set_AlarmA2[2] = {
+		{2,1,1,1,3,0,Intelligent_mode,NULL,Set_AlarmA},
+		{2,2,1,1,3,0,Intelligent_mode,NULL,Set_AlarmA},
+};
+
+struct Menu Observed_Value2[5]={
+		{5,1,1,1,3,0,Manual_mode,NULL,Observed_Value},
+		{5,2,1,1,3,0,Manual_mode,NULL,Observed_Value},
+		{5,3,1,1,3,0,Manual_mode,NULL,Observed_Value},
+		{5,4,1,1,3,0,Manual_mode,NULL,Observed_Value},
+		{5,5,1,1,3,0,Manual_mode,NULL,Observed_Value},
+};
+	
+
+struct Menu *menuP = Manual_mode             ;//指向主菜单的第一项
+
+RTC_TimeTypeDef RTC_TimeStruct               ;//时间               
+RTC_DateTypeDef RTC_DateStruct               ;//日期
+u8 tbuf[40]                                  ;
+
+
+///*=========================================================*/
+///*==================主菜单显示函数=========================*/
+///*=========================================================*/
+//	
+//void Main_display(void)
+//{
+//	
+//}
+
+/*=========================================================*/
+/*==================手动模式显示函数==========================*/
+/*=========================================================*/
+
+void Manual_display(void)
+{
+  DisplayButtonUp(79,8,183,35); 		
+	Gui_DrawFont_GBK16(90,10,BLUE,GRAY0,"Manual Mode");
+		
+	RTC_GetTime(RTC_Format_BIN,&RTC_TimeStruct);	
+	
+	sprintf((char*)tbuf,"Time:%02d:%02d:%02d",RTC_TimeStruct.RTC_Hours,RTC_TimeStruct.RTC_Minutes,RTC_TimeStruct.RTC_Seconds); 	
+  Gui_DrawFont_GBK16(30,70,BLUE,GRAY0,tbuf);
+		
+	RTC_GetDate(RTC_Format_BIN, &RTC_DateStruct);
+		
+	sprintf((char*)tbuf,"Date:20%02d-%02d-%02d",RTC_DateStruct.RTC_Year,RTC_DateStruct.RTC_Month,RTC_DateStruct.RTC_Date); 
+	Gui_DrawFont_GBK16(30,90,BLUE,GRAY0,tbuf);	
+		
+	sprintf((char*)tbuf,"Week:%d",RTC_DateStruct.RTC_WeekDay); 
+	Gui_DrawFont_GBK16(30,110,BLUE,GRAY0,tbuf);
+	
+}	
+
+/*=========================================================*/
+/*==================智能模式显示函数==========================*/
+/*=========================================================*/
+
+void Intelligent_display(void)
+{
+	 DisplayButtonUp(69,8,183,35); 		
+	 Gui_DrawFont_GBK16(80,10,BLUE,GRAY0,"Smart Mode");
+	 DisplayButtonUp(5,45,235,70); 
+	 Switch_mode(Intelligent_mode[0].start_bit);
+	 Time_Date_display();
+	 Gui_DrawFont_GBK16(30,150,BLUE,GRAY0,"Change Mode ");
+	 Gui_DrawFont_GBK16(30,175,BLUE,GRAY0,"Settings"); 
+}	
+
+	
+/*=========================================================*/
+/*==================设置模式显示函数==========================*/
+/*=========================================================*/
+
+void Settings_display(void)
+{
+  DisplayButtonUp(69,8,183,35); 		
+
+	Gui_DrawFont_GBK16(80,10,BLUE,GRAY0,"Setting Menu");
+	DisplayButtonUp(5,45,235,70); 
+	Gui_DrawFont_GBK16(30,50,BLUE,GRAY0,"Observed Value");
+	Gui_DrawFont_GBK16(30,75,BLUE,GRAY0,"Set Time");
+	Gui_DrawFont_GBK16(30,100,BLUE,GRAY0,"Set Date");
+	Gui_DrawFont_GBK16(30,135,BLUE,GRAY0,"Set AlarmA");
+	Gui_DrawFont_GBK16(30,160,BLUE,GRAY0,"Back");
+}	
+
+/*=========================================================*/
+/*==================设置时间函数=========================*/
+/*=========================================================*/
+	
+void Set_Time(u8 Time_value)
+{
+	RTC_TimeTypeDef RTC_Time;
+	RTC_GetTime(RTC_Format_BIN, &RTC_Time);
+	switch(menuP->start_bit)
+	{
+		case 1:
+		{
+			RTC_Time.RTC_Hours=Time_value;
+			RTC_Set_Time(Time_value,RTC_Time.RTC_Minutes,RTC_Time.RTC_Seconds,RTC_H12_AM);	
+			break;
+		}
+		case 2:
+		{
+			RTC_Set_Time(RTC_Time.RTC_Hours,Time_value,RTC_Time.RTC_Seconds,RTC_H12_AM);
+			break;
+		}
+		case 3:
+		{
+			RTC_Set_Time(RTC_Time.RTC_Hours,RTC_Time.RTC_Minutes,Time_value,RTC_H12_AM);
+			break;
+		}
+		default:
+			break;
+	}
+}
+
+/*=========================================================*/
+/*==================设置日期函数=========================*/
+/*=========================================================*/
+	
+void Set_Date(u8 Date_value)
+{
+	RTC_DateTypeDef RTC_Date;
+	RTC_GetDate(RTC_Format_BIN, &RTC_Date);
+	switch(menuP->start_bit)
+	{
+		case 1:
+		{
+			RTC_Set_Date(Date_value,RTC_Date.RTC_Month,RTC_Date.RTC_Date,RTC_Date.RTC_WeekDay);	
+			break;
+		}
+		case 2:
+		{
+			RTC_Set_Date(RTC_Date.RTC_Year,Date_value,RTC_Date.RTC_Date,RTC_Date.RTC_WeekDay);	
+			break;
+		}
+		case 3:
+		{
+			RTC_Set_Date(RTC_Date.RTC_Year,RTC_Date.RTC_Month,Date_value,RTC_Date.RTC_WeekDay);	
+			break;
+		}
+		default:
+			break;
+	}
+}
+
+/*=========================================================*/
+/*==================设置星期函数=========================*/
+/*=========================================================*/
+	
+void Set_Week(u8 Week_value)
+{
+	RTC_DateTypeDef RTC_Date;
+	RTC_GetDate(RTC_Format_BIN, &RTC_Date);
+	RTC_Set_Date(RTC_Date.RTC_Year,RTC_Date.RTC_Month,RTC_Date.RTC_Date,Week_value);	
+}
+
+/*=========================================================*/
+/*==================设置闹钟函数=========================*/
+/*=========================================================*/
+	
+void Set_AlarmA(u8 AlarmA_value)
+{
+	switch(menuP->start_bit)
+	{
+		case 1:
+		{
+			alarma.week=AlarmA_value;	
+			break;
+		}
+		case 2:
+		{
+			alarma.hours=AlarmA_value;	
+			break;
+		}
+		case 3:
+		{
+			alarma.minutes=AlarmA_value;		
+			break;
+		}
+		case 4:
+		{
+			alarma.seconds=AlarmA_value;		
+			break;
+		}
+		case 5:
+		{
+			RTC_Set_AlarmA(alarma.week,alarma.hours,alarma.minutes,alarma.seconds);	
+			break;
+		}
+		default:
+			break;
+	}
+}
+
+
+/*=========================================================*/
+/*==================查看pwm和光传感器的值函数=========================*/
+/*=========================================================*/
+	
+void Observed_Value(void)
+{
+	Lights_pwm_display(Natural_Light,LED_Light,pwm1,pwm2);
+	Gui_DrawFont_GBK16(30,140,BLUE,GRAY0,"Back");
+}
+
+
+

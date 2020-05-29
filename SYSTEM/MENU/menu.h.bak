@@ -1,0 +1,40 @@
+#ifndef __MENU_H
+#define __MENU_H
+
+#include "stm32f4xx.h"
+
+#define NULL  0
+#define start 1
+#define stop  0 
+
+
+struct Menu{
+	   u8 menu_num                   ;//菜单数目
+	   u8 item                       ;//当前菜单项
+	   u8 page_num                   ;//菜单页数
+	   u8 page                       ;//菜单当前页数
+	   u8 menu_level                 ;//菜单等级
+//	   RTC_TimeTypeDef RTC_TimeStruct;//时间
+//   	 RTC_DateTypeDef RTC_DateStruct;//日期
+	   u8 start_bit                  ;//功能确定，1为可以设定，0为不可以设定,在智能模式下：0：Reading 1:Writting 2:Moive 3: Game
+//	   int set_value                 ;//当前项设置的值
+//	   int sensor_value            ;//当前项传感器的值
+	   struct Menu *parent           ;//上一级菜单
+		 struct Menu *children         ;//下一级菜单
+		 void(*Function)(void)         ;//当前菜单的功能函数
+};
+
+//void Main_display(void);
+void Settings_display(void);
+void Manual_display(void);
+void Intelligent_display(void);
+void Set_Date(void);
+void Set_Time(void);
+void Set_Week(void);
+void Set_AlarmA(void);
+//void Manual_Setting_display(void);
+//void Intelligent_Setting_display(void);
+
+
+
+#endif
